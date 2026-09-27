@@ -1,0 +1,450 @@
+-- [[ MP ADMIN PANEL: M-BOX EDITION + TRUE 100% FULL CLONE MORPH + INTRO SOUND ]] --
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local LocalPlayer = Players.LocalPlayer
+
+local function checkAccess()
+    if game:GetService("RunService"):IsStudio() then return true end
+    if LocalPlayer.Name == "gag2ggez55" then return true end
+    return false
+end
+
+if not checkAccess() then
+    warn("⚠️ [MP Admin]: คุณไม่มีสิทธิ์ใช้งานแอดมินนี้ (เฉพาะบัญชี gag2ggez55 เท่านั้น)")
+    return
+end
+
+-- ฟังก์ชันเล่นเสียงเปิด UI
+local function playIntroSound()
+    pcall(function()
+        local introSound = Instance.new("Sound")
+        introSound.SoundId = "rbxassetid://9063384212" -- สามารถเปลี่ยน Sound ID ตรงนี้ได้ตามต้องการ
+        introSound.Volume = 0.6
+        introSound.Parent = SoundService
+        introSound:Play()
+        
+        -- ลบ Sound ทิ้งหลังเล่นจบเพื่อไม่ให้รกหน่วยความจำ
+        introSound.Ended:Connect(function()
+            introSound:Destroy()
+        end)
+    end)
+end
+
+if gethui():FindFirstChild("MP_LoaderGui") then gethui().MP_LoaderGui:Destroy() end
+if gethui():FindFirstChild("MP_AdminPanel") then gethui().MP_AdminPanel:Destroy() end
+
+-- ==========================================
+-- หน้าต่างเลือกระบบเวอร์ชัน (Mini-GUI Loader)
+-- ==========================================
+local LoaderGui = Instance.new("ScreenGui", gethui())
+LoaderGui.Name = "MP_LoaderGui"
+LoaderGui.ResetOnSpawn = false
+
+local LoaderFrame = Instance.new("Frame", LoaderGui)
+LoaderFrame.Size = UDim2.new(0, 320, 0, 220)
+LoaderFrame.Position = UDim2.new(0.5, -160, 0.4, -110)
+LoaderFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+LoaderFrame.Active = true
+LoaderFrame.Draggable = true
+Instance.new("UICorner", LoaderFrame).CornerRadius = UDim.new(0, 14)
+
+local LoaderStroke = Instance.new("UIStroke", LoaderFrame)
+LoaderStroke.Thickness = 2
+LoaderStroke.Color = Color3.fromRGB(255, 50, 50)
+
+local LoaderTitle = Instance.new("TextLabel", LoaderFrame)
+LoaderTitle.Size = UDim2.new(1, 0, 0, 40)
+LoaderTitle.BackgroundTransparency = 1
+LoaderTitle.Font = Enum.Font.GothamBlack
+LoaderTitle.Text = "🛡️ SELECT ADMIN VERSION"
+LoaderTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoaderTitle.TextSize = 13
+
+local function createVersionBtn(text, yPos, color, callback)
+    local btn = Instance.new("TextButton", LoaderFrame)
+    btn.Size = UDim2.new(1, -30, 0, 50)
+    btn.Position = UDim2.new(0, 15, 0, yPos)
+    btn.BackgroundColor3 = color
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function()
+        LoaderGui:Destroy()
+        playIntroSound() -- เล่นเสียงตอนเปิดหน้าต่างหลัก
+        callback()
+    end)
+end
+
+-- เวอร์ชันใหม่ v1.0 (ด้านบน)
+createVersionBtn("🔥 เวอร์ชันใหม่ v1.0 (Modern M-Box UI)", 45, Color3.fromRGB(200, 50, 0), function()
+    openAdminPanel(true)
+end)
+
+-- เวอร์ชันเก่า v0.9 (ด้านล่าง)
+createVersionBtn("⚡ เวอร์ชันเก่า v0.9 (Classic Mode)", 115, Color3.fromRGB(50, 50, 50), function()
+    openAdminPanel(false)
+end)
+
+function openAdminPanel(isV1)
+    local ScreenGui = Instance.new("ScreenGui", gethui())
+    ScreenGui.Name = "MP_AdminPanel"
+    ScreenGui.ResetOnSpawn = false
+
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = isV1 and UDim2.new(0, 720, 0, 420) or UDim2.new(0, 620, 0, 360)
+    Main.Position = UDim2.new(0.5, -280, 0.5, -180)
+    Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    Main.Active = true
+    Main.Draggable = true
+    Main.ClipsDescendants = true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
+
+    local Stroke = Instance.new("UIStroke", Main)
+    Stroke.Thickness = 3
+    task.spawn(function()
+        local t = 0
+        while Main.Parent do
+            t = t + 0.05
+            Stroke.Color = Color3.fromRGB(255, math.clamp(math.sin(t)*100 + 50, 0, 150), 0)
+            task.wait(0.05)
+        end
+    end)
+
+    local TopBar = Instance.new("Frame", Main)
+    TopBar.Size = UDim2.new(1, 0, 0, 38)
+    TopBar.BackgroundTransparency = 1
+
+    local TitleLabel = Instance.new("TextLabel", TopBar)
+    TitleLabel.Size = UDim2.new(0, 450, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 16, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Font = Enum.Font.GothamBlack
+    TitleLabel.Text = isV1 and "🔥 MP Admin Panel [v1.0 Modern M-Box]" or "⚡ MP Admin Panel [v0.9 Classic]"
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 100, 50)
+    TitleLabel.TextSize = 13
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local Close = Instance.new("TextButton", TopBar)
+    Close.Size = UDim2.new(0, 28, 0, 28)
+    Close.Position = UDim2.new(1, -36, 0, 5)
+    Close.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+    Close.Text = "X"
+    Close.TextColor3 = Color3.new(1,1,1)
+    Close.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
+    Close.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+    local ToggleBtn = Instance.new("TextButton", ScreenGui)
+    ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+    ToggleBtn.Position = UDim2.new(0, 15, 0.8, -22)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    ToggleBtn.Text = "M-BOX"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 80, 0)
+    ToggleBtn.Font = Enum.Font.GothamBlack
+    ToggleBtn.TextSize, ToggleBtn.Active, ToggleBtn.Draggable = 10, true, true
+    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1,0)
+    ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+
+    local Sidebar = Instance.new("Frame", Main)
+    Sidebar.Size = UDim2.new(0.24, -10, 1, -50)
+    Sidebar.Position = UDim2.new(0, 8, 0, 42)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(15, 12, 12)
+    Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
+
+    local ContentArea = Instance.new("Frame", Main)
+    ContentArea.Size = UDim2.new(0.76, -18, 1, -50)
+    ContentArea.Position = UDim2.new(0.24, 12, 0, 42)
+    ContentArea.BackgroundTransparency = 1
+
+    local function createPanel()
+        local p = Instance.new("Frame", ContentArea)
+        p.Size = UDim2.new(1, 0, 1, 0)
+        p.BackgroundTransparency = 1
+        p.Visible = false
+        return p
+    end
+
+    local PlayerPanel = createPanel()
+    PlayerPanel.Visible = true
+    local FunPanel = createPanel()
+    local SettingsPanel = createPanel()
+
+    local function createSidebarBtn(text, yPos)
+        local btn = Instance.new("TextButton", Sidebar)
+        btn.Size = UDim2.new(1, -8, 0, 36)
+        btn.Position = UDim2.new(0, 4, 0, yPos)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 15, 15)
+        btn.Font = Enum.Font.GothamBold
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+        btn.TextSize = 11
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        return btn
+    end
+
+    local Btn1 = createSidebarBtn("👥 Real-time Players", 8)
+    local Btn2 = createSidebarBtn("🎭 Morph & God", 48)
+    local Btn3 = createSidebarBtn("⚙️ Settings", 88)
+    Btn1.BackgroundColor3 = Color3.fromRGB(200, 50, 0)
+
+    local function hideAll()
+        PlayerPanel.Visible = false
+        FunPanel.Visible = false
+        SettingsPanel.Visible = false
+        Btn1.BackgroundColor3 = Color3.fromRGB(30, 15, 15)
+        Btn2.BackgroundColor3 = Color3.fromRGB(30, 15, 15)
+        Btn3.BackgroundColor3 = Color3.fromRGB(30, 15, 15)
+    end
+
+    Btn1.MouseButton1Click:Connect(function() hideAll() PlayerPanel.Visible = true Btn1.BackgroundColor3 = Color3.fromRGB(200, 50, 0) end)
+    Btn2.MouseButton1Click:Connect(function() hideAll() FunPanel.Visible = true Btn2.BackgroundColor3 = Color3.fromRGB(200, 50, 0) end)
+    Btn3.MouseButton1Click:Connect(function() hideAll() SettingsPanel.Visible = true Btn3.BackgroundColor3 = Color3.fromRGB(200, 50, 0) end)
+
+    -- ==========================================
+    -- หมวด 1: รายชื่อผู้เล่นเรียลไทม์
+    -- ==========================================
+    local TargetScroll = Instance.new("ScrollingFrame", PlayerPanel)
+    TargetScroll.Size = UDim2.new(1, 0, 0, 220)
+    TargetScroll.Position = UDim2.new(0, 0, 0, 5)
+    TargetScroll.BackgroundColor3 = Color3.fromRGB(10, 8, 8)
+    TargetScroll.CanvasSize = UDim2.new(0,0,0,0)
+    Instance.new("UICorner", TargetScroll).CornerRadius = UDim.new(0, 6)
+    local TargetLayout = Instance.new("UIListLayout", TargetScroll)
+    TargetLayout.Padding = UDim.new(0, 3)
+
+    local selectedTarget = nil
+    local function refreshPlayers()
+        for _, child in ipairs(TargetScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+        for _, p in ipairs(Players:GetPlayers()) do
+            local pBtn = Instance.new("TextButton", TargetScroll)
+            pBtn.Size = UDim2.new(1, 0, 0, 32)
+            pBtn.BackgroundColor3 = (selectedTarget == p) and Color3.fromRGB(200, 50, 0) or Color3.fromRGB(30, 15, 15)
+            pBtn.Font = Enum.Font.Gotham
+            pBtn.Text = " 👤 " .. p.Name .. (p == LocalPlayer and " (You)" or "")
+            pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            pBtn.TextSize = 11
+            pBtn.TextXAlignment = Enum.TextXAlignment.Left
+            Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 4)
+            
+            pBtn.MouseButton1Click:Connect(function()
+                selectedTarget = p
+                refreshPlayers()
+            end)
+        end
+        TargetScroll.CanvasSize = UDim2.new(0, 0, 0, TargetLayout.AbsoluteContentSize.Y + 10)
+    end
+    refreshPlayers()
+    Players.PlayerAdded:Connect(refreshPlayers)
+    Players.PlayerRemoving:Connect(refreshPlayers)
+
+    local GotoBtn = Instance.new("TextButton", PlayerPanel)
+    GotoBtn.Size = UDim2.new(0.48, 0, 0, 36)
+    GotoBtn.Position = UDim2.new(0, 0, 0, 232)
+    GotoBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+    GotoBtn.Font = Enum.Font.GothamBold
+    GotoBtn.Text = "🚀 เทเลפורตไปหา (Goto)"
+    GotoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    GotoBtn.TextSize = 11
+    Instance.new("UICorner", GotoBtn).CornerRadius = UDim.new(0, 6)
+    GotoBtn.MouseButton1Click:Connect(function()
+        if selectedTarget and selectedTarget.Character and LocalPlayer.Character then
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = selectedTarget.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+            end)
+        end
+    end)
+
+    local KickBtn = Instance.new("TextButton", PlayerPanel)
+    KickBtn.Size = UDim2.new(0.48, 0, 0, 36)
+    KickBtn.Position = UDim2.new(0.52, 0, 0, 232)
+    KickBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    KickBtn.Font = Enum.Font.GothamBold
+    KickBtn.Text = "❌ เตะผู้เล่น (Kick)"
+    KickBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KickBtn.TextSize = 11
+    Instance.new("UICorner", KickBtn).CornerRadius = UDim.new(0, 6)
+    KickBtn.MouseButton1Click:Connect(function()
+        if selectedTarget and selectedTarget ~= LocalPlayer then
+            pcall(function() selectedTarget:Kick("คุณถูกเตะออกจากเซิร์ฟเวอร์โดยแอดมิน") end)
+        end
+    end)
+
+    -- ==========================================
+    -- หมวด 2: แปลงร่างแบบ True 100% Full Clone & อมนุษย์
+    -- ==========================================
+    local GodBtn = Instance.new("TextButton", FunPanel)
+    GodBtn.Size = UDim2.new(1, 0, 0, 38)
+    GodBtn.Position = UDim2.new(0, 0, 0, 5)
+    GodBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+    GodBtn.Font = Enum.Font.GothamBold
+    GodBtn.Text = "🛡️ เปิดโหมดอมตะ (God Mode)"
+    GodBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    GodBtn.TextSize = 11
+    Instance.new("UICorner", GodBtn).CornerRadius = UDim.new(0, 6)
+
+    local godEnabled = false
+    GodBtn.MouseButton1Click:Connect(function()
+        godEnabled = not godEnabled
+        GodBtn.BackgroundColor3 = godEnabled and Color3.fromRGB(200, 50, 0) or Color3.fromRGB(60, 25, 25)
+        GodBtn.Text = godEnabled and "🛡️ อมตะ (God Mode): เปิดแล้ว" or "🛡️ เปิดโหมดอมตะ (God Mode)"
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and godEnabled then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then hum.Health = hum.MaxHealth end
+            end
+        end)
+    end)
+
+    local MorphBtn = Instance.new("TextButton", FunPanel)
+    MorphBtn.Size = UDim2.new(1, 0, 0, 40)
+    MorphBtn.Position = UDim2.new(0, 0, 0, 48)
+    MorphBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 0)
+    MorphBtn.Font = Enum.Font.GothamBold
+    MorphBtn.Text = "🎭 แปลงร่างก๊อป 100% (True Full Clone)"
+    MorphBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MorphBtn.TextSize = 11
+    Instance.new("UICorner", MorphBtn).CornerRadius = UDim.new(0, 6)
+
+    MorphBtn.MouseButton1Click:Connect(function()
+        pcall(function()
+            if selectedTarget and selectedTarget.Character and LocalPlayer.Character then
+                local targetChar = selectedTarget.Character
+                local myChar = LocalPlayer.Character
+                
+                for _, child in ipairs(myChar:GetChildren()) do
+                    if child:IsA("Accessory") or child:IsA("Clothing") or child:IsA("ShirtGraphic") or child:IsA("BodyColors") or child:IsA("CharacterMesh") or child:IsA("Pants") or child:IsA("Shirt") then
+                        child:Destroy()
+                    end
+                end
+                
+                for _, child in ipairs(targetChar:GetChildren()) do
+                    if child:IsA("Accessory") or child:IsA("Clothing") or child:IsA("ShirtGraphic") or child:IsA("BodyColors") or child:IsA("CharacterMesh") or child:IsA("Pants") or child:IsA("Shirt") then
+                        child:Clone().Parent = myChar
+                    end
+                end
+
+                local targetHead = targetChar:FindFirstChild("Head")
+                local myHead = myChar:FindFirstChild("Head")
+                if targetHead and myHead then
+                    myHead.Color = targetHead.Color
+                    myHead.Transparency = targetHead.Transparency
+                    myHead.Reflectance = targetHead.Reflectance
+                    
+                    for _, m in ipairs(myHead:GetChildren()) do
+                        if m:IsA("SpecialMesh") or m:IsA("DataModelMesh") or m:IsA("FileMesh") then
+                            m:Destroy()
+                        end
+                    end
+                    for _, m in ipairs(targetHead:GetChildren()) do
+                        if m:IsA("SpecialMesh") or m:IsA("DataModelMesh") or m:IsA("FileMesh") then
+                            m:Clone().Parent = myHead
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+
+    local UnmorphBtn = Instance.new("TextButton", FunPanel)
+    UnmorphBtn.Size = UDim2.new(1, 0, 0, 40)
+    UnmorphBtn.Position = UDim2.new(0, 0, 0, 93)
+    UnmorphBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+    UnmorphBtn.Font = Enum.Font.GothamBold
+    UnmorphBtn.Text = "🔄 ยกเลิกการแปลงร่าง (Reset Character)"
+    UnmorphBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    UnmorphBtn.TextSize = 11
+    Instance.new("UICorner", UnmorphBtn).CornerRadius = UDim.new(0, 6)
+
+    UnmorphBtn.MouseButton1Click:Connect(function()
+        pcall(function()
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.Health = 0 end
+        end)
+    end)
+
+    -- ==========================================
+    -- หมวด 3: ตั้งค่า GUI (Settings)
+    -- ==========================================
+    local ThemeToggle = Instance.new("TextButton", SettingsPanel)
+    ThemeToggle.Size = UDim2.new(1, 0, 0, 38)
+    ThemeToggle.Position = UDim2.new(0, 0, 0, 5)
+    ThemeToggle.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    ThemeToggle.Font = Enum.Font.GothamBold
+    ThemeToggle.Text = "🎨 เปลี่ยนธีมสีไฟ RGB (ส้มแดง / รุ้ง)"
+    ThemeToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ThemeToggle.TextSize = 11
+    Instance.new("UICorner", ThemeToggle).CornerRadius = UDim.new(0, 6)
+
+    local altTheme = false
+    ThemeToggle.MouseButton1Click:Connect(function() altTheme = not altTheme end)
+
+    task.spawn(function()
+        local t = 0
+        while Main.Parent do
+            t = t + 0.05
+            if altTheme then
+                Stroke.Color = Color3.fromHSV((t/10)%1, 1, 1)
+            else
+                Stroke.Color = Color3.fromRGB(255, math.clamp(math.sin(t)*100 + 50, 0, 150), 0)
+            end
+            task.wait(0.05)
+        end
+    end)
+
+    local ScaleToggle = Instance.new("TextButton", SettingsPanel)
+    ScaleToggle.Size = UDim2.new(1, 0, 0, 38)
+    ScaleToggle.Position = UDim2.new(0, 0, 0, 48)
+    ScaleToggle.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    ScaleToggle.Font = Enum.Font.GothamBold
+    ScaleToggle.Text = "🔍 ย่อ/ขยายหน้าจอ (Compact Size)"
+    ScaleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ScaleToggle.TextSize = 11
+    Instance.new("UICorner", ScaleToggle).CornerRadius = UDim.new(0, 6)
+
+    local isCompact = false
+    ScaleToggle.MouseButton1Click:Connect(function()
+        isCompact = not isCompact
+        Main.Size = isCompact and UDim2.new(0, 520, 0, 300) or (isV1 and UDim2.new(0, 720, 0, 420) or UDim2.new(0, 620, 0, 360))
+    end)
+
+    local LangToggle = Instance.new("TextButton", SettingsPanel)
+    LangToggle.Size = UDim2.new(1, 0, 0, 38)
+    LangToggle.Position = UDim2.new(0, 0, 0, 91)
+    LangToggle.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    LangToggle.Font = Enum.Font.GothamBold
+    LangToggle.Text = "🌐 ภาษา / Language (TH / EN)"
+    LangToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LangToggle.TextSize = 11
+    Instance.new("UICorner", LangToggle).CornerRadius = UDim.new(0, 6)
+
+    local isThai = true
+    LangToggle.MouseButton1Click:Connect(function()
+        isThai = not isThai
+        if isThai then
+            Btn1.Text = "👥 รายชื่อผู้เล่น"
+            Btn2.Text = "🎭 แปลงร่าง & อมตะ"
+            Btn3.Text = "⚙️ ตั้งค่า GUI"
+            GotoBtn.Text = "🚀 เทเลפורตไปหา (Goto)"
+            KickBtn.Text = "❌ เตะผู้เล่น (Kick)"
+            GodBtn.Text = "🛡️ เปิดโหมดอมตะ (God Mode)"
+            MorphBtn.Text = "🎭 แปลงร่างก๊อป 100% (True Clone)"
+            UnmorphBtn.Text = "🔄 ยกเลิกการแปลงร่าง (Reset)"
+        else
+            Btn1.Text = "👥 Real-time Players"
+            Btn2.Text = "🎭 Morph & God"
+            Btn3.Text = "⚙️ Settings"
+            GotoBtn.Text = "🚀 Teleport (Goto)"
+            KickBtn.Text = "❌ Kick Player"
+            GodBtn.Text = "🛡️ God Mode"
+            MorphBtn.Text = "🎭 True Full Clone Morph"
+            UnmorphBtn.Text = "🔄 Reset Character"
+        end
+    end)
+end
