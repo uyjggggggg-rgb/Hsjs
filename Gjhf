@@ -1,0 +1,241 @@
+-- สร้างหน้าต่าง GUI พื้นฐานและระบบ ESP
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+-- ลบ GUI เก่าทิ้งถ้ามีอยู่แล้ว
+if LocalPlayer.PlayerGui:FindFirstChild("DeltaTeleportGUI") then
+    LocalPlayer.PlayerGui.DeltaTeleportGUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaTeleportGUI"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- หน้าต่างหลัก (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 250, 0, 360) -- เพิ่มความสูงให้มีที่สำหรับปุ่ม ESP
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -180)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- แถบหัวข้อ (Title Bar)
+local TitleBar = Instance.new("TextLabel")
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TitleBar.Text = "Delta TP & ESP"
+TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleBar.TextSize = 16
+TitleBar.Font = Enum.Font.SourceSansBold
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleBar
+
+-- ปุ่มเปิด/ปิดหน้าต่างหลัก (Minimize)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 30, 0, 30)
+ToggleButton.Position = UDim2.new(1, -35, 0, 5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleButton.Text = "-"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Parent = TitleBar
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = ToggleButton
+
+-- ปุ่มเปิด/ปิด ESP (ESP Toggle Button)
+local ESPButton = Instance.new("TextButton")
+ESPButton.Size = UDim2.new(1, -20, 0, 30)
+ESPButton.Position = UDim2.new(0, 10, 0, 45)
+ESPButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50) -- สีแดงหมายถึงปิดอยู่
+ESPButton.Text = "ESP: OFF"
+ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPButton.TextSize = 14
+ESPButton.Font = Enum.Font.SourceSansBold
+ESPButton.Parent = MainFrame
+
+local ESPBtnCorner = Instance.new("UICorner")
+ESPBtnCorner.CornerRadius = UDim.new(0, 6)
+ESPBtnCorner.Parent = ESPButton
+
+-- ScrollingFrame สำหรับแสดงรายชื่อผู้เล่น
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -125)
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 85)
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = ScrollingFrame
+
+-- ตารางเก็บ Drawing ESP ของแต่ละผู้เล่น
+local espEnabled = false
+local espDrawings = {}
+
+local function removeESP(player)
+    if espDrawings[player] then
+        for _, obj in pairs(espDrawings[player]) do
+            obj:Remove()
+        end
+        espDrawings[player] = nil
+    end
+end
+
+-- ฟังก์ชันอัปเดตรายชื่อผู้เล่นแบบ Real-time
+local function updatePlayerList()
+    for _, child in ipairs(ScrollingFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local PlayerButton = Instance.new("TextButton")
+            PlayerButton.Size = UDim2.new(1, 0, 0, 35)
+            PlayerButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            PlayerButton.Text = "  " .. player.Name
+            PlayerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            PlayerButton.TextSize = 14
+            PlayerButton.TextXAlignment = Enum.TextXAlignment.Left
+            PlayerButton.Font = Enum.Font.SourceSans
+            PlayerButton.Parent = ScrollingFrame
+
+            local BtnCorner = Instance.new("UICorner")
+            BtnCorner.CornerRadius = UDim.new(0, 4)
+            BtnCorner.Parent = PlayerButton
+
+            -- เมื่อกดเลือกชื่อผู้เล่นเพื่อ Teleport ไปข้างหลัง
+            PlayerButton.MouseButton1Click:Connect(function()
+                for _, btn in ipairs(ScrollingFrame:GetChildren()) do
+                    if btn:IsA("TextButton") then
+                        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                    end
+                end
+                PlayerButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+                
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = player.Character.HumanoidRootPart
+                    local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    
+                    if myHRP then
+                        local backPosition = targetHRP.CFrame * CFrame.new(0, 0, 5)
+                        myHRP.CFrame = backPosition
+                    end
+                end
+            end)
+        end
+    end
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #Players:GetPlayers() * 40)
+end
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+    updatePlayerList()
+end)
+updatePlayerList()
+
+-- ลูปการทำงานของ ESP แบบ Real-time (แสดง ชื่อ, เลือด, ระยะทาง)
+RunService.RenderStepped:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            -- ตรวจสอบว่าเปิด ESP อยู่ไหม และผู้เล่นมีตัวละครพร้อมไหม
+            if espEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") then
+                local character = player.Character
+                local hrp = character.HumanoidRootPart
+                local humanoid = character.Humanoid
+
+                -- สร้าง Drawing Text ถ้ายังไม่มี
+                if not espDrawings[player] then
+                    local text = Drawing.new("Text")
+                    text.Visible = false
+                    text.Center = true
+                    text.Outline = true
+                    text.Font = 2
+                    text.Size = 16
+                    text.Color = Color3.fromRGB(255, 255, 255)
+                    espDrawings[player] = {Text = text}
+                end
+
+                local espText = espDrawings[player].Text
+
+                -- คำนวณตำแหน่งบนหน้าจอ (WorldToViewportPoint)
+                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 2.5, 0))
+
+                if onScreen then
+                    -- คำนวณระยะห่าง
+                    local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local distance = myHRP and math.floor((hrp.Position - myHRP.Position).Magnitude) or 0
+
+                    -- ดึงค่าเลือด
+                    local health = math.floor(humanoid.Health)
+                    local maxHealth = math.floor(humanoid.MaxHealth)
+
+                    -- กำหนดข้อความที่จะแสดง
+                    espText.Text = string.format("%s\nHP: %d/%d | [%dm]", player.Name, health, maxHealth, distance)
+                    espText.Position = Vector2.new(vector.X, vector.Y)
+                    espText.Visible = true
+                else
+                    espText.Visible = false
+                end
+            else
+                -- ซ่อนหรือลบ ESP ทิ้งถ้าปิดใช้งานหรือตัวละครตาย
+                if espDrawings[player] and espDrawings[player].Text then
+                    espDrawings[player].Text.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- ระบบเปิด/ปิด ESP จากปุ่มในหน้าต่าง
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        ESPButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- สีเขียวเมื่อเปิด
+        ESPButton.Text = "ESP: ON"
+    else
+        ESPButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50) -- สีแดงเมื่อปิด
+        ESPButton.Text = "ESP: OFF"
+        -- ซ่อนข้อความทั้งหมดทันทีเมื่อปิด
+        for _, data in pairs(espDrawings) do
+            if data.Text then
+                data.Text.Visible = false
+            end
+        end
+    end
+end)
+
+-- ระบบย่อ/ขยายหน้าต่าง (Minimize)
+local isMinimized = false
+ToggleButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    ScrollingFrame.Visible = not isMinimized
+    ESPButton.Visible = not isMinimized
+    if isMinimized then
+        MainFrame.Size = UDim2.new(0, 250, 0, 40)
+        ToggleButton.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, 250, 0, 360)
+        ToggleButton.Text = "-"
+    end
+end)
